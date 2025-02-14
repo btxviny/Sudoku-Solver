@@ -7,16 +7,18 @@ import time
 from detect_border import detect_border
 
 # Define folders
-image_save_folder = "./data/images"
-points_save_folder = "./data/vertices"
+image_save_folder = "./data/original/valid_images"
+points_save_folder = "./data/original/vertices"
+masks_save_folder = "./data/original/masks"
 
 # Ensure folders exist
 os.makedirs(image_save_folder, exist_ok=True)
 os.makedirs(points_save_folder, exist_ok=True)
+os.makedirs(masks_save_folder, exist_ok=True)
 
 
 # Load all image files (change the extension if needed)
-files = glob.glob("./data/dataset/images/*.jpeg") + glob.glob("./data/dataset/images/*.jpg")  # Modify path accordingly
+files = glob.glob("./data/original/images/*.jpeg") + glob.glob("./data/dataset/images/*.jpg")  # Modify path accordingly
 
 # Track saved files for undo functionality
 saved_files = []
@@ -40,11 +42,16 @@ for file in files:
         continue  # Skip to the next image
     cv2.imshow('image_with_contours',image_with_contours)
     # Save valid images automatically
+    h,w,_ = image.shape
+    mask = np.zeros((h,w),dtype=np.float32)
+    cv2.fillPoly(mask, [approx], 1)
     unique_name = f"{base_name}_{time.time()}"
     image_path = os.path.join(image_save_folder, unique_name + ".jpg")
+    mask_path = os.path.join(masks_save_folder, unique_name + ".png")
     points_path = os.path.join(points_save_folder, unique_name + ".npy")
-
+    
     cv2.imwrite(image_path, image)
+    cv2.imwrite(mask_path, mask)
     np.save(points_path, approx)
 
     print(f"Saved valid image: {image_path} and points: {points_path}")
